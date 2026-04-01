@@ -1,16 +1,30 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Login.aspx.cs" Inherits="GestionTareas_SevenSuite.Login" %>
 
 <!DOCTYPE html>
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 <head runat="server">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title></title>
+    <title>Seven Suite - Access</title>
+    <link href="Assets/css/styles.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <form id="form1" runat="server">
-        <div>
+    <div class="login-card">
+        <h2>Seven Suite</h2>
+        <div id="errorMessage" style="display:none;"></div>
+        
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="txtUsername" placeholder="Enter your username" autocomplete="off" />
         </div>
-    </form>
+        
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="txtPassword" placeholder="••••••••" />
+        </div>
+        
+        <button type="button" id="btnLogin" class="btn-primary">Sign In</button>
+    </div>
+
+    <script src="Assets/js/scripts.js"></script>
 </body>
 </html>
