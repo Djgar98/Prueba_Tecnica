@@ -13,10 +13,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{346DF0A7-97B2-4222-A8B2-4B1CEA1A7662}|GestionTareas_SevenSuite\\GestionTareas_SevenSuite.csproj|C:\\Users\\Danny Garcia\\OneDrive\\Documentos\\Monografa\\Prueba Tecnica\\Prueba_Tecnica\\GestionTareas_SevenSuite\\gestiontareas_sevensuite\\default.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{346DF0A7-97B2-4222-A8B2-4B1CEA1A7662}|GestionTareas_SevenSuite\\GestionTareas_SevenSuite.csproj|solutionrelative:gestiontareas_sevensuite\\default.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{346DF0A7-97B2-4222-A8B2-4B1CEA1A7662}|GestionTareas_SevenSuite\\GestionTareas_SevenSuite.csproj|c:\\users\\danny garcia\\onedrive\\documentos\\monografa\\prueba tecnica\\prueba_tecnica\\gestiontareas_sevensuite\\gestiontareas_sevensuite\\dal\\userdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{346DF0A7-97B2-4222-A8B2-4B1CEA1A7662}|GestionTareas_SevenSuite\\GestionTareas_SevenSuite.csproj|solutionrelative:gestiontareas_sevensuite\\dal\\userdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,21 +22,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "UserDAL.cs",
-              "DocumentMoniker": "C:\\Users\\Danny Garcia\\OneDrive\\Documentos\\Monografa\\Prueba Tecnica\\Prueba_Tecnica\\GestionTareas_SevenSuite\\GestionTareas_SevenSuite\\DAL\\UserDAL.cs",
-              "RelativeDocumentMoniker": "GestionTareas_SevenSuite\\DAL\\UserDAL.cs",
-              "ToolTip": "C:\\Users\\Danny Garcia\\OneDrive\\Documentos\\Monografa\\Prueba Tecnica\\Prueba_Tecnica\\GestionTareas_SevenSuite\\GestionTareas_SevenSuite\\DAL\\UserDAL.cs",
-              "RelativeToolTip": "GestionTareas_SevenSuite\\DAL\\UserDAL.cs",
-              "ViewState": "AgIAAFcAAAAAAAAAAAAowGgAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-03T17:01:14.531Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -49,7 +32,7 @@
               "RelativeDocumentMoniker": "GestionTareas_SevenSuite\\Assets\\js\\scripts.js",
               "ToolTip": "C:\\Users\\Danny Garcia\\OneDrive\\Documentos\\Monografa\\Prueba Tecnica\\Prueba_Tecnica\\GestionTareas_SevenSuite\\GestionTareas_SevenSuite\\Assets\\js\\scripts.js",
               "RelativeToolTip": "GestionTareas_SevenSuite\\Assets\\js\\scripts.js",
-              "ViewState": "AgIAADQAAAAAAAAAAAAowE0AAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAKkAAAAAAAAAAAAQwAMBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2026-04-03T16:53:19.857Z",
               "EditorCaption": ""
@@ -75,7 +58,7 @@
               "RelativeDocumentMoniker": "GestionTareas_SevenSuite\\Default.aspx.cs",
               "ToolTip": "C:\\Users\\Danny Garcia\\OneDrive\\Documentos\\Monografa\\Prueba Tecnica\\Prueba_Tecnica\\GestionTareas_SevenSuite\\GestionTareas_SevenSuite\\Default.aspx.cs",
               "RelativeToolTip": "GestionTareas_SevenSuite\\Default.aspx.cs",
-              "ViewState": "AgIAAGEAAAAAAAAAAAAowGsAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAAAFAAAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-01T13:02:16.764Z",
               "EditorCaption": ""

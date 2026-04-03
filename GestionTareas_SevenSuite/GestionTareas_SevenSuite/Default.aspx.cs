@@ -81,6 +81,9 @@ namespace GestionTareas_SevenSuite
         [WebMethod]
         public static bool DeleteProject(int id) => new ProjectBLL().DeleteProject(id);
 
+        [WebMethod]
+        public static bool ReactivateProject(int id) => new ProjectBLL().ReactivateProject(id);
+
         // --- MÉTODOS DE TAREAS (Aquí agregué el que faltaba) ---
         [WebMethod]
         public static List<TaskItem> GetTasksList(int? projectId, string filter) => new TaskBLL().GetTasks(projectId, filter);

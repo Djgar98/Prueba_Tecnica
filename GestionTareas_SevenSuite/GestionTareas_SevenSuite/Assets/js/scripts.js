@@ -61,7 +61,7 @@ function loadUsers() {
                     ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${u.IdUser})"><i class="bi bi-trash"></i></button>`
                     : `<button type="button" class="btn btn-sm btn-success" onclick="reactivateUser(${u.IdUser})"><i class="bi bi-check-circle"></i></button>`;
 
-                // Agregué la celda para u.RoleDesc (o como se llame en tu entidad User)
+                
                 html += `<tr>
                     <td>${u.DNI}</td>
                     <td><strong>${u.FirstName} ${u.LastName}</strong></td>
@@ -142,16 +142,29 @@ function loadProjects() {
         success: function (r) {
             let html = "";
             r.d.forEach(p => {
-                let badge = p.IsActive ? 'bg-success' : 'bg-secondary';
+                // Lógica de colores para estados
+                let stateClass = "bg-secondary"; // Default
+                if (p.Status === "Pendiente") stateClass = "bg-warning text-dark";
+                if (p.Status === "En Proceso") stateClass = "bg-info text-white";
+                if (p.Status === "Finalizado") stateClass = "bg-success text-white";
+
+                let activeBadge = p.IsActive ? 'bg-success' : 'bg-danger';
+
+                // Botón de borrado lógico
+                let btnDelete = p.IsActive
+                    ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteProject(${p.IdProject})"><i class="bi bi-trash"></i></button>`
+                    : `<button type="button" class="btn btn-sm btn-success" onclick="reactivateProject(${p.IdProject})"><i class="bi bi-check-circle"></i></button>`;
+
                 html += `<tr>
                     <td><strong>${p.ProjectName}</strong></td>
                     <td>${p.OwnerName}</td>
                     <td>${p.StartDateString}</td>
                     <td>${p.EndDateString}</td>
-                    <td><span class="badge bg-info">${p.Status}</span></td>
-                    <td><span class="badge ${badge}">${p.IsActive ? 'Sí' : 'No'}</span></td>
+                    <td><span class="badge ${stateClass} shadow-sm">${p.Status}</span></td>
+                    <td><span class="badge ${activeBadge}">${p.IsActive ? 'Sí' : 'No'}</span></td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="openProjectModal(${p.IdProject})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="openProjectModal(${p.IdProject})"><i class="bi bi-pencil"></i></button>
+                        ${btnDelete}
                     </td></tr>`;
             });
             $("#tblProjects tbody").html(html);
@@ -159,14 +172,26 @@ function loadProjects() {
     });
 }
 
+// Funciones para el borrado lógico de proyectos
+function deleteProject(id) { if (confirm("¿Desactivar este proyecto?")) execStatus("DeleteProject", id, loadProjects); }
+function reactivateProject(id) { execStatus("ReactivateProject", id, loadProjects); }
+
 function openProjectModal(id) {
-    $("#txtIdProject").val(id);
+    // 1. PRIMERO limpiamos todo el modal
     $("#projectModal input, #projectModal textarea").val("");
+    $("#projectModal select").val(0);
+
+    // 2. DESPUÉS asignamos el ID (para que no se borre con la línea anterior)
+    $("#txtIdUser").val(id); // Si tu hidden se llama txtIdProject, cámbialo aquí
+    $("#txtIdProject").val(id);
+
     loadOwnersCombo().done(function () {
         if (id === 0) {
+            // Configuración para nuevo proyecto
             $("#ddlProjectStatus").val("Pendiente");
             bootstrap.Modal.getOrCreateInstance(document.getElementById('projectModal')).show();
         } else {
+            // Configuración para editar proyecto existente
             $.ajax({
                 type: "POST",
                 url: "Default.aspx/GetProjectById",
@@ -174,13 +199,18 @@ function openProjectModal(id) {
                 contentType: "application/json; charset=utf-8",
                 success: function (r) {
                     let p = r.d;
+                    // Llenamos los campos con la data que viene del servidor
                     $("#txtProjectName").val(p.ProjectName);
                     $("#txtProjectDesc").val(p.Description);
                     $("#txtStartDate").val(p.StartDateString);
                     $("#txtEndDate").val(p.EndDateString);
                     $("#ddlProjectOwner").val(p.IdUserOwner);
                     $("#ddlProjectStatus").val(p.Status);
+
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('projectModal')).show();
+                },
+                error: function (xhr) {
+                    console.error("Error al obtener proyecto:", xhr.responseText);
                 }
             });
         }
@@ -188,8 +218,12 @@ function openProjectModal(id) {
 }
 
 function saveProject() {
+    // Validamos que el ID sea un número válido antes de enviarlo
+    let idValue = parseInt($("#txtIdProject").val());
+    if (isNaN(idValue)) idValue = 0;
+
     let pObj = {
-        IdProject: parseInt($("#txtIdProject").val()) || 0,
+        IdProject: idValue, // <--- Este es el valor que evita el duplicado
         ProjectName: $("#txtProjectName").val().trim(),
         Description: $("#txtProjectDesc").val().trim(),
         StartDate: $("#txtStartDate").val(),
@@ -197,14 +231,30 @@ function saveProject() {
         IdUserOwner: parseInt($("#ddlProjectOwner").val()),
         Status: $("#ddlProjectStatus").val()
     };
+
+    // Validación básica antes de AJAX
+    if (pObj.ProjectName === "") {
+        alert("El nombre del proyecto es obligatorio");
+        return;
+    }
+
     $.ajax({
         type: "POST",
         url: "Default.aspx/SaveProject",
         data: JSON.stringify({ project: pObj }),
         contentType: "application/json; charset=utf-8",
-        success: function () {
-            bootstrap.Modal.getInstance(document.getElementById('projectModal')).hide();
-            loadProjects();
+        success: function (r) {
+            // Cerramos el modal usando la instancia de Bootstrap
+            let modElement = document.getElementById('projectModal');
+            let modalInstance = bootstrap.Modal.getInstance(modElement);
+            if (modalInstance) modalInstance.hide();
+
+            loadProjects(); // Recargamos la tabla
+            console.log("Proyecto guardado/actualizado con éxito");
+        },
+        error: function (xhr) {
+            console.error("Error al guardar:", xhr.responseText);
+            alert("Ocurrió un error al procesar la solicitud.");
         }
     });
 }

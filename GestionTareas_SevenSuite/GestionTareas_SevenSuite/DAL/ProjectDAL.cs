@@ -90,31 +90,33 @@ namespace GestionTareas_SevenSuite.DAL
         }
 
 
-
         // MÉTODO PARA BORRADO LÓGICO
         public bool Delete(int id)
         {
             using (SqlConnection conn = Connection.GetConnection())
             {
-                SqlCommand cmd = new SqlCommand("sp_DeleteProject", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@IdProject", id);
+                // Cambiamos IsActive a 0 en lugar de hacer un DELETE físico
+                string query = "UPDATE Projects SET IsActive = 0 WHERE IdProject = @Id";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@Id", id);
                 conn.Open();
                 return cmd.ExecuteNonQuery() > 0;
             }
         }
+
 
         // MÉTODO PARA REACTIVAR
         public bool Reactivate(int id)
         {
             using (SqlConnection conn = Connection.GetConnection())
             {
-                SqlCommand cmd = new SqlCommand("sp_ReactivateProject", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@IdProject", id);
+                string query = "UPDATE Projects SET IsActive = 1 WHERE IdProject = @Id";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@Id", id);
                 conn.Open();
                 return cmd.ExecuteNonQuery() > 0;
             }
         }
+            
     }
 }
