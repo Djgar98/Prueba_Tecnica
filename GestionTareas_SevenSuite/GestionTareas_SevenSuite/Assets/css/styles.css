@@ -67,3 +67,13 @@
     margin-bottom: 15px;
     font-size: 14px;
 }
+
+/* Forzar que el calendario salga encima del modal */
+.ui-datepicker {
+    z-index: 9999 !important;
+}
+
+/* Para que el calendario salga encima del modal */
+.ui-datepicker {
+    z-index: 2000 !important;
+}

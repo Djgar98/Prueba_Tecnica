@@ -18,5 +18,8 @@ namespace GestionTareas_SevenSuite.Entities
         public string Username { get; set; }
         public string Password { get; set; }
         public bool IsActive { get; set; }
+        public string RoleDesc { get; set; }
+        public string GenderDesc { get; set; }
+        public string BirthDateString => BirthDate.ToString("yyyy-MM-dd");
     }
 }
