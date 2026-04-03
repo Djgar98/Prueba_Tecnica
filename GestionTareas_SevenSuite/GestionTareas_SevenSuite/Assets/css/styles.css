@@ -80,3 +80,19 @@
     width: 45% !important;
     margin: 0 2px !important;
 }
+
+
+@media print {
+    .no-print {
+        display: none;
+    }
+    /* Para botones que no quieras que salgan en papel */
+    body {
+        background-color: white !important;
+    }
+
+    .table {
+        width: 100% !important;
+        border-collapse: collapse;
+    }
+}

@@ -136,6 +136,12 @@
                                         <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openTaskModal(0)" data-bs-toggle="tooltip" data-bs-title="Asignar nueva tarea">
                                             <i class="bi bi-plus-square-fill me-2"></i> Nueva Tarea
                                         </button>
+                                        <button type="button" class="btn btn-outline-dark shadow-sm" 
+                                                onclick="generateReport('Task')" 
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-title="Generar reporte PDF de las tareas filtradas">
+                                            <i class="bi bi-printer me-2"></i> Imprimir
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="table-responsive">

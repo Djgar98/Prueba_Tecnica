@@ -546,3 +546,29 @@ function logout() {
         }
     });
 }
+
+//Reportes  
+function generateReport(module) {
+    // Capturamos el filtro actual según donde esté el usuario
+    let filterValue = "";
+    if (module === 'User') filterValue = $("#txtSearchUser").val();
+    if (module === 'Project') filterValue = $("#txtSearchProject").val();
+    if (module === 'Task') filterValue = $("#txtSearchTask").val();
+
+    // Enviamos el filtro al WebMethod PrepareReport
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/PrepareReport",
+        data: JSON.stringify({ module: module, filter: filterValue }),
+        contentType: "application/json; charset=utf-8",
+        success: function (r) {
+            if (r.d === "success") {
+                // Si el servidor guardó la sesión con éxito, abrimos el reporte
+                window.open("ReportPage.aspx", "_blank");
+            }
+        },
+        error: function (xhr) {
+            console.error("Error al preparar reporte:", xhr.responseText);
+        }
+    });
+}

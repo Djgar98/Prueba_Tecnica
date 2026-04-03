@@ -131,5 +131,18 @@ namespace GestionTareas_SevenSuite
             }
         }
 
+
+        //Reporte
+
+        [WebMethod(EnableSession = true)]
+        public static string PrepareReport(string module, string filter)
+        {
+            // Guardamos el filtro y el módulo en sesión para que el ReportViewer lo lea
+            HttpContext.Current.Session["CurrentFilter"] = filter;
+            HttpContext.Current.Session["CurrentModule"] = module;
+
+            return "success";
+        }
+
     }
 }

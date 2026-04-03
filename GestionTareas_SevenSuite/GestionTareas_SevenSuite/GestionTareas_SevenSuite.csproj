@@ -71,6 +71,7 @@
     <Content Include="Assets\js\scripts.js" />
     <Content Include="Default.aspx" />
     <Content Include="Login.aspx" />
+    <Content Include="ReportPage.aspx" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +101,13 @@
       <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReportPage.aspx.cs">
+      <DependentUpon>ReportPage.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ReportPage.aspx.designer.cs">
+      <DependentUpon>ReportPage.aspx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
