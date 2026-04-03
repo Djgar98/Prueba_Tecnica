@@ -260,24 +260,40 @@ function saveProject() {
 }
 
 // --- MÓDULO TAREAS ---
+
 function loadTasks() {
     $.ajax({
         type: "POST",
         url: "Default.aspx/GetTasksList",
+        // projectId null para traer todas, o el valor de un filtro si lo tienes
         data: JSON.stringify({ projectId: null, filter: $("#txtSearchTask").val() || "" }),
         contentType: "application/json; charset=utf-8",
         success: function (r) {
             let html = "";
             r.d.forEach(t => {
-                let cls = t.Status === "Terminada" ? "bg-success" : (t.Status === "En Proceso" ? "bg-warning text-dark" : "bg-secondary");
+                let stateClass = "bg-secondary";
+                if (t.Status === "Pendiente") stateClass = "bg-warning text-dark";
+                if (t.Status === "En Proceso") stateClass = "bg-info text-white";
+                if (t.Status === "Terminada" || t.Status === "Finalizado") stateClass = "bg-success text-white";
+
+                let activeBadge = t.IsActive ? 'bg-success' : 'bg-danger';
+
+                let btnDelete = t.IsActive
+                    ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteTask(${t.IdTask})"><i class="bi bi-trash"></i></button>`
+                    : `<button type="button" class="btn btn-sm btn-success" onclick="reactivateTask(${t.IdTask})"><i class="bi bi-check-circle"></i></button>`;
+
                 html += `<tr>
                     <td><strong>${t.Title}</strong></td>
                     <td>${t.ProjectName}</td>
                     <td>${t.AssignedTo}</td>
                     <td>${t.DueDateString}</td>
-                    <td><span class="badge ${cls}">${t.Status}</span></td>
+                    <td><span class="badge ${stateClass} shadow-sm">${t.Status}</span></td>
+                    <td><span class="badge ${activeBadge}">${t.IsActive ? 'Sí' : 'No'}</span></td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-warning" onclick="openTaskModal(${t.IdTask})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="openTaskModal(${t.IdTask})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        ${btnDelete}
                     </td></tr>`;
             });
             $("#tblTasks tbody").html(html);
@@ -286,13 +302,17 @@ function loadTasks() {
 }
 
 function openTaskModal(id) {
+    // Limpieza total
+    $("#taskModal input, #taskModal textarea").val("");
+    $("#taskModal select").val(0);
     $("#txtIdTask").val(id);
-    $("#taskModal input").val("");
-    $("#divCommentsList").empty();
+    $("#divCommentsList").html('<div class="text-center p-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</div>');
 
     $.when(loadProjectsCombo(), loadOwnersCombo()).done(function () {
         if (id === 0) {
             $("#ddlTaskStatus").val("Pendiente");
+            $("#ddlTaskPriority").val("Media");
+            $("#divCommentsList").html('<p class="text-muted text-center small py-2">Sin comentarios para tareas nuevas.</p>');
             bootstrap.Modal.getOrCreateInstance(document.getElementById('taskModal')).show();
         } else {
             $.ajax({
@@ -302,13 +322,16 @@ function openTaskModal(id) {
                 contentType: "application/json; charset=utf-8",
                 success: function (r) {
                     let t = r.d;
-                    $("#ddlTaskProject").val(t.IdProject);
-                    $("#txtTaskTitle").val(t.Title);
-                    $("#ddlTaskUser").val(t.IdUserAssigned);
-                    $("#txtTaskDueDate").val(t.DueDateString);
-                    $("#ddlTaskStatus").val(t.Status);
-                    loadComments(id);
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById('taskModal')).show();
+                    if (t) {
+                        $("#ddlTaskProject").val(t.IdProject);
+                        $("#txtTaskTitle").val(t.Title);
+                        $("#txtTaskDescription").val(t.Description);
+                        $("#ddlTaskUser").val(t.IdAssignedUser);
+                        $("#txtTaskDueDate").val(t.DueDateString);
+                        $("#ddlTaskStatus").val(t.Status);
+                        loadComments(id);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById('taskModal')).show();
+                    }
                 }
             });
         }
@@ -316,25 +339,51 @@ function openTaskModal(id) {
 }
 
 function saveTask() {
+    let idValue = parseInt($("#txtIdTask").val()) || 0;
+
     let tObj = {
-        IdTask: parseInt($("#txtIdTask").val()) || 0,
+        IdTask: idValue,
         IdProject: parseInt($("#ddlTaskProject").val()),
         Title: $("#txtTaskTitle").val().trim(),
-        IdUserAssigned: parseInt($("#ddlTaskUser").val()),
-        DueDate: $("#txtTaskDueDate").val(),
-        Status: $("#ddlTaskStatus").val()
+        Description: $("#txtTaskDescription").val() || "",
+        IdAssignedUser: parseInt($("#ddlTaskUser").val()),
+        Status: $("#ddlTaskStatus").val(),
+        Priority: $("#ddlTaskPriority").val() || "Media",
+        DueDate: $("#txtTaskDueDate").val()
     };
+
+    if (tObj.IdProject === 0 || tObj.Title === "" || tObj.IdAssignedUser === 0) {
+        alert("Por favor selecciona Proyecto, Título y Responsable.");
+        return;
+    }
+
     $.ajax({
         type: "POST",
         url: "Default.aspx/SaveTask",
         data: JSON.stringify({ task: tObj }),
         contentType: "application/json; charset=utf-8",
-        success: function () {
-            bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
-            loadTasks();
+        success: function (r) {
+            // Importante: Si r.d devuelve el ID (int), lo usamos para el comentario
+            if (r.d) {
+                let commentText = $("#txtNewComment").val().trim();
+                let finalId = (idValue === 0 && typeof r.d === 'number') ? r.d : idValue;
+
+                // Si hay comentario escrito, lo guardamos antes de cerrar
+                if (commentText !== "" && finalId > 0) {
+                    executeSaveComment(finalId, commentText);
+                }
+
+                let mod = document.getElementById('taskModal');
+                bootstrap.Modal.getInstance(mod).hide();
+                loadTasks();
+            } else {
+                alert("La base de datos rechazó el cambio.");
+            }
         }
     });
 }
+
+// --- GESTIÓN DE COMENTARIOS ---
 
 function loadComments(idTask) {
     $.ajax({
@@ -345,9 +394,10 @@ function loadComments(idTask) {
         success: function (r) {
             let h = "";
             r.d.forEach(c => {
+                // Usando Author y CommentText según tu entidad C#
                 h += `<div class="p-2 border-bottom small">
-                        <strong>${c.UserName}</strong> <span class="text-muted float-end">${c.DateString}</span><br/>
-                        ${c.Text}
+                        <strong>${c.Author}</strong> <span class="text-muted float-end">${c.DateString}</span><br/>
+                        ${c.CommentText}
                       </div>`;
             });
             $("#divCommentsList").html(h || '<p class="text-muted text-center small">Sin comentarios</p>');
@@ -355,21 +405,45 @@ function loadComments(idTask) {
     });
 }
 
+// Botón del avioncito
 function saveComment() {
-    let id = parseInt($("#txtIdTask").val());
+    let idTask = parseInt($("#txtIdTask").val()) || 0;
     let txt = $("#txtNewComment").val().trim();
-    if (!txt) return;
+
+    if (idTask === 0) {
+        alert("Primero guarda la tarea para poder comentar.");
+        return;
+    }
+    if (txt === "") return;
+
+    executeSaveComment(idTask, txt);
+}
+
+// Función común de envío
+function executeSaveComment(idTask, text) {
     $.ajax({
         type: "POST",
         url: "Default.aspx/SaveComment",
-        data: JSON.stringify({ idTask: id, text: txt }),
+        data: JSON.stringify({ idTask: idTask, text: text }),
         contentType: "application/json; charset=utf-8",
-        success: function () {
-            $("#txtNewComment").val("");
-            loadComments(id);
+        success: function (r) {
+            if (r.d) {
+                $("#txtNewComment").val("");
+                loadComments(idTask); // Refrescar lista si el modal sigue abierto
+            } else {
+                alert("El servidor rechazó el comentario. Revisa la sesión.");
+            }
         }
     });
 }
+
+function deleteTask(id) {
+    if (confirm("¿Desactivar esta tarea?")) execStatus("DeleteTask", id, loadTasks);
+}
+function reactivateTask(id) {
+    execStatus("ReactivateTask", id, loadTasks);
+}
+
 
 // --- UTILIDADES ---
 function loadCatalogs() {
@@ -450,6 +524,8 @@ function logout() {
         type: "POST",
         url: "Default.aspx/Logout",
         contentType: "application/json; charset=utf-8",
-        success: function () { window.location.href = "Login.aspx"; }
+        success: function () {
+            window.location.href = "Login.aspx";
+        }
     });
 }

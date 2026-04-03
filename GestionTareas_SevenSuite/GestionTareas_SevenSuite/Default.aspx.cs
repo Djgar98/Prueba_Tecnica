@@ -14,35 +14,35 @@ namespace GestionTareas_SevenSuite
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Validar si la cookie existe
-            if (Request.Cookies["UserAuth"] == null)
+            if (!IsPostBack)
             {
-                // Si no existe, mandarlo al Login de inmediato
-                Response.Redirect("Login.aspx");
+                // Revisamos si existe la cookie que creaste en el Login
+                HttpCookie authCookie = Request.Cookies["UserAuth"];
+
+                if (authCookie == null || string.IsNullOrEmpty(authCookie["UserId"]))
+                {
+                    // Si no hay cookie, ¡fuera! al Login
+                    Response.Redirect("Login.aspx");
+                }
             }
         }
 
         // Función para mostrar el nombre en el HTML
         public string GetUserName()
         {
-            if (Request.Cookies["UserAuth"] != null)
-            {
-                return Request.Cookies["UserAuth"]["FullName"];
-            }
-            return "Invitado";
+            HttpCookie authCookie = Request.Cookies["UserAuth"];
+            return authCookie != null ? authCookie["FullName"] : "Invitado";
         }
 
-        [System.Web.Services.WebMethod]
-        public static string Logout()
+        [WebMethod]
+        public static void Logout()
         {
             if (HttpContext.Current.Request.Cookies["UserAuth"] != null)
             {
                 HttpCookie myCookie = new HttpCookie("UserAuth");
-                myCookie.Path = "/"; // <--- MISMO PATH QUE EN EL LOGIN
-                myCookie.Expires = DateTime.Now.AddDays(-1d); // FECHA PASADA
+                myCookie.Expires = DateTime.Now.AddDays(-1d); // Fecha pasada para borrarla
                 HttpContext.Current.Response.Cookies.Add(myCookie);
             }
-            return "success";
         }
 
         // --- MÉTODOS DE USUARIOS ---
@@ -84,21 +84,22 @@ namespace GestionTareas_SevenSuite
         [WebMethod]
         public static bool ReactivateProject(int id) => new ProjectBLL().ReactivateProject(id);
 
-        // --- MÉTODOS DE TAREAS (Aquí agregué el que faltaba) ---
+        // --- MÉTODOS DE TAREAS 
         [WebMethod]
         public static List<TaskItem> GetTasksList(int? projectId, string filter) => new TaskBLL().GetTasks(projectId, filter);
 
         [WebMethod]
-        public static bool SaveTask(TaskItem task) => new TaskBLL().SaveTask(task);
+        public static bool SaveTask(TaskItem task)
+        {
+            return new TaskBLL().SaveTask(task);
+        }
 
         [WebMethod]
         public static TaskItem GetTaskById(int id)
         {
-            try { return new TaskBLL().GetTaskById(id); }
-            catch { return null; }
+            return new TaskBLL().GetTaskById(id);
         }
 
-        // ESTE ES EL QUE TE FALTABA PARA QUE FUNCIONARA EL BOTÓN DE BORRAR
         [WebMethod]
         public static bool DeleteTask(int id)
         {
@@ -109,20 +110,25 @@ namespace GestionTareas_SevenSuite
         [WebMethod]
         public static List<Comment> GetTaskComments(int idTask) => new TaskBLL().GetComments(idTask);
 
-        [WebMethod(EnableSession = true)]
+        [WebMethod]
         public static bool SaveComment(int idTask, string text)
         {
             try
             {
-                // Prioridad 1: Session (Más segura para WebMethods)
-                object userIdSession = HttpContext.Current.Session["UserId"];
+                // 1. Buscamos la Cookie de autenticación
+                HttpCookie authCookie = HttpContext.Current.Request.Cookies["UserAuth"];
 
-                if (userIdSession == null) return false;
+                if (authCookie == null) return false;
 
-                int idUser = Convert.ToInt32(userIdSession);
+                // 2. Sacamos el ID del usuario de la Cookie
+                int idUser = int.Parse(authCookie["UserId"]);
+
                 return new TaskBLL().AddComment(idTask, idUser, text);
             }
-            catch { return false; }
+            catch
+            {
+                return false;
+            }
         }
 
     }

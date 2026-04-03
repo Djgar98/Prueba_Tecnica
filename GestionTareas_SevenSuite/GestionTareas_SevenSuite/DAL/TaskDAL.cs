@@ -54,7 +54,9 @@ namespace GestionTareas_SevenSuite.DAL
             {
                 SqlCommand cmd = new SqlCommand("sp_GetTaskById", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@IdTask", id);
+
+                
+                cmd.Parameters.AddWithValue("@Id", id);
 
                 conn.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
@@ -67,6 +69,7 @@ namespace GestionTareas_SevenSuite.DAL
                             IdProject = Convert.ToInt32(dr["IdProject"]),
                             Title = dr["Title"].ToString(),
                             Description = dr["Description"].ToString(),
+                            // Asegúrate que en la DB la columna se llame IdAssignedUser
                             IdAssignedUser = Convert.ToInt32(dr["IdAssignedUser"]),
                             Status = dr["Status"].ToString(),
                             Priority = dr["Priority"]?.ToString() ?? "Media",
@@ -86,13 +89,16 @@ namespace GestionTareas_SevenSuite.DAL
                 SqlCommand cmd = new SqlCommand("sp_UpsertTask", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
 
+                
                 cmd.Parameters.AddWithValue("@IdTask", t.IdTask);
                 cmd.Parameters.AddWithValue("@IdProject", t.IdProject);
                 cmd.Parameters.AddWithValue("@Title", t.Title);
                 cmd.Parameters.AddWithValue("@Description", (object)t.Description ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@IdAssignedUser", t.IdAssignedUser);
+                cmd.Parameters.AddWithValue("@IdAssignedUser", t.IdAssignedUser); 
                 cmd.Parameters.AddWithValue("@Status", t.Status);
                 cmd.Parameters.AddWithValue("@Priority", t.Priority ?? "Media");
+
+                // Manejo de fecha nula para evitar errores de conversión
                 cmd.Parameters.AddWithValue("@DueDate", (object)t.DueDate ?? DBNull.Value);
 
                 conn.Open();
@@ -147,14 +153,18 @@ namespace GestionTareas_SevenSuite.DAL
         {
             using (SqlConnection conn = Connection.GetConnection())
             {
+                
                 SqlCommand cmd = new SqlCommand("sp_AddTaskComment", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+
+                
                 cmd.Parameters.AddWithValue("@IdTask", idTask);
                 cmd.Parameters.AddWithValue("@IdUser", idUser);
                 cmd.Parameters.AddWithValue("@CommentText", text);
 
                 conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                int rows = cmd.ExecuteNonQuery();
+                return rows > 0;
             }
         }
     }
