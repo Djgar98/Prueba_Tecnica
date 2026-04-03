@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     
-    <style>a
+    <style>
         body { overflow-x: hidden; background-color: #f8f9fa; }
         .sidebar { min-height: 100vh; background-color: #fff; border-right: 1px solid #dee2e6; position: sticky; top: 56px; }
         .nav-link { color: #333; font-weight: 500; transition: 0.2s; cursor: pointer; padding: 12px 20px; }
@@ -21,6 +21,9 @@
         .navbar-brand { font-weight: bold; letter-spacing: 1px; }
         .comment-box { max-height: 250px; overflow-y: auto; background: #f8f9fa; border: 1px solid #eee; border-radius: 8px; padding: 12px; }
         .sticky-top { z-index: 1030; }
+        /* Estilo para que los tooltips se vean sobre los modales */
+        .tooltip { z-index: 2100 !important; }
+        .tooltip-inner { background-color: #0d6efd !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body class="bg-light">
@@ -34,7 +37,8 @@
                         <small class="text-muted">Usuario:</small> 
                         <strong><%= GetUserName() %></strong>
                     </div>
-                    <button type="button" id="btnLogout" class="btn btn-outline-danger btn-sm px-3" onclick="logout()">
+                    <button type="button" id="btnLogout" class="btn btn-outline-danger btn-sm px-3" onclick="logout()" 
+                            data-bs-toggle="tooltip" data-bs-title="Cerrar sesión de forma segura">
                         <i class="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
                     </button>
                 </div>
@@ -47,17 +51,17 @@
                     <div class="pt-3">
                         <ul class="nav flex-column px-2">
                             <li class="nav-item mb-1">
-                                <a class="nav-link active rounded" onclick="showSection('users')">
+                                <a class="nav-link active rounded" onclick="showSection('users')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Ver listado de usuarios">
                                     <i class="bi bi-people me-2"></i> Usuarios
                                 </a>
                             </li>
                             <li class="nav-item mb-1">
-                                <a class="nav-link rounded" onclick="showSection('projects')">
+                                <a class="nav-link rounded" onclick="showSection('projects')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Ver listado de proyectos">
                                     <i class="bi bi-kanban me-2"></i> Proyectos
                                 </a>
                             </li>
                             <li class="nav-item mb-1">
-                                <a class="nav-link rounded" onclick="showSection('tasks')">
+                                <a class="nav-link rounded" onclick="showSection('tasks')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Ver listado de tareas">
                                     <i class="bi bi-check2-square me-2"></i> Tareas
                                 </a>
                             </li>
@@ -73,8 +77,8 @@
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <h3 class="fw-bold m-0 text-dark">Gestión de Usuarios</h3>
                                     <div class="d-flex gap-2">
-                                        <input type="text" id="txtSearchUser" class="form-control" placeholder="Buscar..." onkeyup="loadUsers()" />
-                                        <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openUserModal(0)">
+                                        <input type="text" id="txtSearchUser" class="form-control" placeholder="Buscar..." onkeyup="loadUsers()" data-bs-toggle="tooltip" data-bs-title="Escriba para filtrar por nombre o cédula" />
+                                        <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openUserModal(0)" data-bs-toggle="tooltip" data-bs-title="Agregar un nuevo usuario">
                                             <i class="bi bi-person-plus-fill me-2"></i> Nuevo
                                         </button>
                                     </div>
@@ -100,8 +104,8 @@
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <h3 class="fw-bold m-0 text-dark">Gestión de Proyectos</h3>
                                     <div class="d-flex gap-2">
-                                        <input type="text" id="txtSearchProject" class="form-control" placeholder="Buscar..." onkeyup="loadProjects()" />
-                                        <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openProjectModal(0)">
+                                        <input type="text" id="txtSearchProject" class="form-control" placeholder="Buscar..." onkeyup="loadProjects()" data-bs-toggle="tooltip" data-bs-title="Filtrar por nombre de proyecto" />
+                                        <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openProjectModal(0)" data-bs-toggle="tooltip" data-bs-title="Crear un nuevo proyecto">
                                             <i class="bi bi-kanban-fill me-2"></i> Nuevo
                                         </button>
                                     </div>
@@ -128,8 +132,8 @@
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <h3 class="fw-bold m-0 text-dark">Gestión de Tareas</h3>
                                     <div class="d-flex gap-2">
-                                        <input type="text" id="txtSearchTask" class="form-control" placeholder="Buscar tarea..." onkeyup="loadTasks()" />
-                                        <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openTaskModal(0)">
+                                        <input type="text" id="txtSearchTask" class="form-control" placeholder="Buscar tarea..." onkeyup="loadTasks()" data-bs-toggle="tooltip" data-bs-title="Filtrar tareas por título" />
+                                        <button type="button" class="btn btn-primary shadow-sm text-nowrap" onclick="openTaskModal(0)" data-bs-toggle="tooltip" data-bs-title="Asignar nueva tarea">
                                             <i class="bi bi-plus-square-fill me-2"></i> Nueva Tarea
                                         </button>
                                     </div>
@@ -167,15 +171,15 @@
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <input type="hidden" id="txtIdUser" value="0" />
-                            <div class="col-md-6"><label class="small fw-bold">Nombres</label><input type="text" id="txtFirstName" class="form-control" /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Apellidos</label><input type="text" id="txtLastName" class="form-control" /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Cédula</label><input type="text" id="txtDNI" class="form-control" maxlength="16" /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Nacimiento</label><input type="text" id="txtBirthDate" class="form-control datepicker bg-white Datepicker" readonly /></div>
-                            <div class="col-md-4"><label class="small fw-bold">Género</label><select id="ddlGender" class="form-select"></select></div>
-                            <div class="col-md-4"><label class="small fw-bold">Estado Civil</label><select id="ddlMaritalStatus" class="form-select"></select></div>
-                            <div class="col-md-4"><label class="small fw-bold">Rol</label><select id="ddlRole" class="form-select"></select></div>
-                            <div class="col-md-6"><label class="small fw-bold">Usuario</label><input type="text" id="txtNewUsername" class="form-control" /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Contraseña</label><input type="password" id="txtNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Nombres</label><input type="text" id="txtFirstName" class="form-control" data-bs-toggle="tooltip" data-bs-title="Nombres del colaborador" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Apellidos</label><input type="text" id="txtLastName" class="form-control" data-bs-toggle="tooltip" data-bs-title="Apellidos del colaborador" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Cédula</label><input type="text" id="txtDNI" class="form-control" maxlength="16" data-bs-toggle="tooltip" data-bs-title="Formato nacional: 000-000000-0000X" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Nacimiento</label><input type="text" id="txtBirthDate" class="form-control datepicker bg-white Datepicker" readonly data-bs-toggle="tooltip" data-bs-title="Fecha de nacimiento" /></div>
+                            <div class="col-md-4"><label class="small fw-bold">Género</label><select id="ddlGender" class="form-select" data-bs-toggle="tooltip" data-bs-title="Seleccione género"></select></div>
+                            <div class="col-md-4"><label class="small fw-bold">Estado Civil</label><select id="ddlMaritalStatus" class="form-select" data-bs-toggle="tooltip" data-bs-title="Seleccione estado civil"></select></div>
+                            <div class="col-md-4"><label class="small fw-bold">Rol</label><select id="ddlRole" class="form-select" data-bs-toggle="tooltip" data-bs-title="Nivel de permisos"></select></div>
+                            <div class="col-md-6"><label class="small fw-bold">Usuario</label><input type="text" id="txtNewUsername" class="form-control" data-bs-toggle="tooltip" data-bs-title="Nombre de acceso al sistema" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Contraseña</label><input type="password" id="txtNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" data-bs-toggle="tooltip" data-bs-title="Opcional al editar" /></div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -196,14 +200,14 @@
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <input type="hidden" id="txtIdProject" value="0" />
-                            <div class="col-md-12"><label class="small fw-bold">Nombre</label><input type="text" id="txtProjectName" class="form-control" /></div>
-                            <div class="col-md-12"><label class="small fw-bold">Descripción</label><textarea id="txtProjectDesc" class="form-control" rows="2"></textarea></div>
-                            <div class="col-md-6"><label class="small fw-bold">Inicio</label><input type="text" id="txtStartDate" class="form-control datepicker bg-white" readonly /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Entrega</label><input type="text" id="txtEndDate" class="form-control datepicker bg-white" readonly /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Responsable</label><select id="ddlProjectOwner" class="form-select"></select></div>
+                            <div class="col-md-12"><label class="small fw-bold">Nombre</label><input type="text" id="txtProjectName" class="form-control" data-bs-toggle="tooltip" data-bs-title="Nombre del proyecto o cliente" /></div>
+                            <div class="col-md-12"><label class="small fw-bold">Descripción</label><textarea id="txtProjectDesc" class="form-control" rows="2" data-bs-toggle="tooltip" data-bs-title="Breve resumen de objetivos"></textarea></div>
+                            <div class="col-md-6"><label class="small fw-bold">Inicio</label><input type="text" id="txtStartDate" class="form-control datepicker bg-white" readonly data-bs-toggle="tooltip" data-bs-title="Fecha de inicio real/estimada" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Entrega</label><input type="text" id="txtEndDate" class="form-control datepicker bg-white" readonly data-bs-toggle="tooltip" data-bs-title="Fecha de entrega pactada" /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Responsable</label><select id="ddlProjectOwner" class="form-select" data-bs-toggle="tooltip" data-bs-title="Líder a cargo"></select></div>
                             <div class="col-md-6">
                                 <label class="small fw-bold">Estado</label>
-                                <select id="ddlProjectStatus" class="form-select">
+                                <select id="ddlProjectStatus" class="form-select" data-bs-toggle="tooltip" data-bs-title="Estado actual del proyecto">
                                     <option value="Pendiente">Pendiente</option>
                                     <option value="En Proceso">En Proceso</option>
                                     <option value="Finalizado">Finalizado</option>
@@ -229,13 +233,13 @@
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <input type="hidden" id="txtIdTask" value="0" />
-                            <div class="col-md-12"><label class="small fw-bold">Proyecto</label><select id="ddlTaskProject" class="form-select"></select></div>
-                            <div class="col-md-12"><label class="small fw-bold">Título</label><input type="text" id="txtTaskTitle" class="form-control" /></div>
-                            <div class="col-md-12"><label class="small fw-bold">Responsable</label><select id="ddlTaskUser" class="form-select"></select></div>
-                            <div class="col-md-6"><label class="small fw-bold">Vencimiento</label><input type="text" id="txtTaskDueDate" class="form-control datepicker bg-white" readonly /></div>
+                            <div class="col-md-12"><label class="small fw-bold">Proyecto</label><select id="ddlTaskProject" class="form-select" data-bs-toggle="tooltip" data-bs-title="Proyecto asociado"></select></div>
+                            <div class="col-md-12"><label class="small fw-bold">Título</label><input type="text" id="txtTaskTitle" class="form-control" data-bs-toggle="tooltip" data-bs-title="Título corto de la tarea" /></div>
+                            <div class="col-md-12"><label class="small fw-bold">Responsable</label><select id="ddlTaskUser" class="form-select" data-bs-toggle="tooltip" data-bs-title="Usuario que ejecutará la tarea"></select></div>
+                            <div class="col-md-6"><label class="small fw-bold">Vencimiento</label><input type="text" id="txtTaskDueDate" class="form-control datepicker bg-white" readonly data-bs-toggle="tooltip" data-bs-title="Fecha límite de ejecución" /></div>
                             <div class="col-md-6">
                                 <label class="small fw-bold">Estado</label>
-                                <select id="ddlTaskStatus" class="form-select">
+                                <select id="ddlTaskStatus" class="form-select" data-bs-toggle="tooltip" data-bs-title="Estado de progreso">
                                     <option value="Pendiente">Pendiente</option>
                                     <option value="En Proceso">En Proceso</option>
                                     <option value="Terminada">Terminada</option>
@@ -245,8 +249,8 @@
                                 <h6 class="fw-bold mb-3"><i class="bi bi-chat-left-dots me-2"></i>Comentarios</h6>
                                 <div id="divCommentsList" class="comment-box mb-3"></div>
                                 <div class="input-group">
-                                    <input type="text" id="txtNewComment" class="form-control" placeholder="Escribe un comentario..." />
-                                    <button class="btn btn-primary" type="button" onclick="saveComment()">
+                                    <input type="text" id="txtNewComment" class="form-control" placeholder="Escribe un comentario..." data-bs-toggle="tooltip" data-bs-title="Añadir nota o avance" />
+                                    <button class="btn btn-primary" type="button" onclick="saveComment()" data-bs-toggle="tooltip" data-bs-title="Enviar comentario">
                                         <i class="bi bi-send-fill"></i>
                                     </button>
                                 </div>

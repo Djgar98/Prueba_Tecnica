@@ -13,6 +13,7 @@
 
     // --- 3. LÓGICA DE DASHBOARD ---
     if (isDashboardPage) {
+        initTooltips();
         loadCatalogs();
         loadUsers();
         loadProjects();
@@ -44,6 +45,15 @@ function showSection(sectionName) {
     if (event && event.currentTarget) $(event.currentTarget).addClass("active");
 }
 
+function initTooltips() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        var instance = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+        if (instance) instance.dispose();
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
 // --- MÓDULO USUARIOS ---
 function loadUsers() {
     $.ajax({
@@ -73,6 +83,7 @@ function loadUsers() {
                     </td></tr>`;
             });
             $("#tblUsers tbody").html(html);
+            initTooltips();
         }
     });
 }
@@ -102,6 +113,7 @@ function openUserModal(id) {
                 $("#txtNewUsername").val(u.Username);
                 $("#txtNewPassword").val("").attr("placeholder", "Dejar en blanco para no cambiar");
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
+                setTimeout(initTooltips, 500);
             }
         });
     }
@@ -168,6 +180,7 @@ function loadProjects() {
                     </td></tr>`;
             });
             $("#tblProjects tbody").html(html);
+            initTooltips();
         }
     });
 }
@@ -208,9 +221,11 @@ function openProjectModal(id) {
                     $("#ddlProjectStatus").val(p.Status);
 
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('projectModal')).show();
+                    setTimeout(initTooltips, 500);
                 },
                 error: function (xhr) {
                     console.error("Error al obtener proyecto:", xhr.responseText);
+
                 }
             });
         }
@@ -297,6 +312,7 @@ function loadTasks() {
                     </td></tr>`;
             });
             $("#tblTasks tbody").html(html);
+            initTooltips();
         }
     });
 }
@@ -331,6 +347,7 @@ function openTaskModal(id) {
                         $("#ddlTaskStatus").val(t.Status);
                         loadComments(id);
                         bootstrap.Modal.getOrCreateInstance(document.getElementById('taskModal')).show();
+                        setTimeout(initTooltips, 500);
                     }
                 }
             });
