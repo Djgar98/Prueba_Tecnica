@@ -67,13 +67,16 @@
     margin-bottom: 15px;
     font-size: 14px;
 }
-
-/* Forzar que el calendario salga encima del modal */
+/* Esto obliga al calendario a salir siempre al frente */
 .ui-datepicker {
     z-index: 9999 !important;
 }
 
-/* Para que el calendario salga encima del modal */
-.ui-datepicker {
-    z-index: 2000 !important;
+/* Arreglo para que los selectores de mes/año no se vean blancos o amontonados */
+.ui-datepicker select.ui-datepicker-month,
+.ui-datepicker select.ui-datepicker-year {
+    color: #333 !important;
+    display: inline-block !important;
+    width: 45% !important;
+    margin: 0 2px !important;
 }

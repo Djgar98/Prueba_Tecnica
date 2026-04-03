@@ -73,7 +73,6 @@ namespace GestionTareas_SevenSuite.DAL
         {
             using (SqlConnection conn = Connection.GetConnection())
             {
-                // Asegúrate de que el SP maneje valores nulos
                 SqlCommand cmd = new SqlCommand("sp_UpsertUser", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
 
@@ -81,14 +80,20 @@ namespace GestionTareas_SevenSuite.DAL
                 cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
                 cmd.Parameters.AddWithValue("@LastName", user.LastName);
                 cmd.Parameters.AddWithValue("@DNI", user.DNI);
-                cmd.Parameters.AddWithValue("@BirthDate", user.BirthDate);
+
+                // Manejo de fecha nula o vacía
+                if (user.BirthDate == DateTime.MinValue)
+                    cmd.Parameters.AddWithValue("@BirthDate", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("@BirthDate", user.BirthDate);
+
                 cmd.Parameters.AddWithValue("@IdGender", user.IdGender);
                 cmd.Parameters.AddWithValue("@IdMaritalStatus", user.IdMaritalStatus);
                 cmd.Parameters.AddWithValue("@IdRol", user.IdRol);
                 cmd.Parameters.AddWithValue("@Username", user.Username);
 
-                // LÓGICA CRUCIAL: Si la contraseña viene vacía, enviamos DBNull
-                if (string.IsNullOrEmpty(user.Password))
+                // LÓGICA DE CONTRASEÑA: Si está vacía enviamos NULL para que el SP no la toque
+                if (string.IsNullOrWhiteSpace(user.Password))
                     cmd.Parameters.AddWithValue("@Password", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@Password", user.Password);
@@ -97,6 +102,7 @@ namespace GestionTareas_SevenSuite.DAL
                 return cmd.ExecuteNonQuery() > 0;
             }
         }
+
         public DataTable GetCatalog(string tableName)
         {
             DataTable dt = new DataTable();

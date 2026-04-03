@@ -1,20 +1,13 @@
 ﻿$(document).ready(function () {
     // --- 1. DETECCIÓN DE PÁGINA ---
-    // Esto evita que el código del Dashboard choque con el del Login
-    var isDashboardPage = $(".navbar").length > 0 || $("#btnLogout").length > 0;
+    var isDashboardPage = $(".navbar").length > 0;
     var isLoginPage = $("#btnLogin").length > 0;
 
     // --- 2. LÓGICA DE INICIO DE SESIÓN ---
     if (isLoginPage) {
-        $("#btnLogin").click(function () {
-            performLogin();
-        });
-
-        // Permitir dar "Enter" para loguearse
+        $("#btnLogin").click(function () { performLogin(); });
         $(document).on("keypress", function (e) {
-            if (e.which == 13) {
-                performLogin();
-            }
+            if (e.which == 13) performLogin();
         });
     }
 
@@ -25,64 +18,33 @@
         loadProjects();
         loadTasks();
 
-        // Inicializar calendarios de jQuery UI
-        $("#txtBirthDate, #txtStartDate, #txtEndDate, #txtTaskDueDate").datepicker({
-            dateFormat: 'yy-mm-dd',
-            changeMonth: true,
-            changeYear: true
-        });
-
-        // Evento para el botón de cerrar sesión
-        $("#btnLogout").click(function () {
-            logout();
+        // CONFIGURACIÓN MAESTRA DEL DATEPICKER (Para que funcione en todos los modales)
+        $(document).on('focus', ".datepicker", function () {
+            $(this).datepicker({
+                dateFormat: 'yy-mm-dd',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "-100:+10",
+                showAnim: "slideDown",
+                beforeShow: function (input, inst) {
+                    setTimeout(function () {
+                        inst.dpDiv.css({ 'z-index': 2100 }); // Por encima del modal
+                    }, 0);
+                }
+            });
         });
     }
 });
 
-// --- FUNCIONES DE NAVEGACIÓN ---
+// --- NAVEGACIÓN ---
 function showSection(sectionName) {
     $(".section-content").hide();
     $(".nav-link").removeClass("active");
     $("#sec-" + sectionName).fadeIn();
     if (event && event.currentTarget) $(event.currentTarget).addClass("active");
-
-    // Recargar datos al cambiar de sección
-    if (sectionName === 'users') loadUsers();
-    if (sectionName === 'projects') loadProjects();
-    if (sectionName === 'tasks') loadTasks();
 }
 
-// --- FUNCIONALIDAD DE LOGIN ---
-function performLogin() {
-    var username = $("#txtUsername").val().trim();
-    var password = $("#txtPassword").val().trim();
-
-    if (username === "" || password === "") {
-        $("#errorMessage").text("Por favor, complete todos los campos.").show();
-        return;
-    }
-
-    $.ajax({
-        type: "POST",
-        url: "Login.aspx/PerformLogin",
-        data: JSON.stringify({ username: username, password: password }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function (response) {
-            if (response.d === "success") {
-                window.location.href = "Default.aspx";
-            } else {
-                $("#errorMessage").text("Credenciales inválidas, intente de nuevo.").show();
-            }
-        },
-        error: function (xhr) {
-            console.error(xhr.responseText);
-            $("#errorMessage").text("Error de conexión con el servidor.").show();
-        }
-    });
-}
-
-// --- GESTIÓN DE USUARIOS (CRUD Y ESTADOS) ---
+// --- MÓDULO USUARIOS ---
 function loadUsers() {
     $.ajax({
         type: "POST",
@@ -95,18 +57,18 @@ function loadUsers() {
                 let badge = u.IsActive ? 'bg-success' : 'bg-secondary';
                 let txtActivo = u.IsActive ? 'Activo' : 'Inactivo';
 
-                // Botón dinámico: si está activo muestra "Basurero", si no muestra "Check"
                 let btnEstado = u.IsActive
-                    ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${u.IdUser})" title="Desactivar"><i class="bi bi-trash"></i></button>`
-                    : `<button type="button" class="btn btn-sm btn-success" onclick="reactivateUser(${u.IdUser})" title="Reactivar"><i class="bi bi-check-circle"></i></button>`;
+                    ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${u.IdUser})"><i class="bi bi-trash"></i></button>`
+                    : `<button type="button" class="btn btn-sm btn-success" onclick="reactivateUser(${u.IdUser})"><i class="bi bi-check-circle"></i></button>`;
 
+                // Agregué la celda para u.RoleDesc (o como se llame en tu entidad User)
                 html += `<tr>
                     <td>${u.DNI}</td>
-                    <td class="fw-bold">${u.FirstName} ${u.LastName}</td>
+                    <td><strong>${u.FirstName} ${u.LastName}</strong></td>
                     <td>${u.GenderDesc}</td>
-                    <td><span class="badge ${badge}">${txtActivo}</span></td>
+                    <td>${u.RoleDesc}</td> <td><span class="badge ${badge}">${txtActivo}</span></td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-warning" onclick="editUser(${u.IdUser})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="openUserModal(${u.IdUser})"><i class="bi bi-pencil"></i></button>
                         ${btnEstado}
                     </td></tr>`;
             });
@@ -115,17 +77,62 @@ function loadUsers() {
     });
 }
 
-function deleteUser(id) {
-    if (confirm("¿Estás seguro de que deseas desactivar este usuario?")) {
-        execStatus("DeleteUser", id, false, loadUsers);
+function openUserModal(id) {
+    $("#txtIdUser").val(id);
+    if (id === 0) {
+        $("#userModal input").val("");
+        $("#userModal select").val(0);
+        $("#txtNewPassword").attr("placeholder", "Mínimo 6 caracteres");
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
+    } else {
+        $.ajax({
+            type: "POST",
+            url: "Default.aspx/GetUserById",
+            data: JSON.stringify({ id: id }),
+            contentType: "application/json; charset=utf-8",
+            success: function (r) {
+                let u = r.d;
+                $("#txtFirstName").val(u.FirstName);
+                $("#txtLastName").val(u.LastName);
+                $("#txtDNI").val(u.DNI);
+                $("#txtBirthDate").val(u.BirthDateString);
+                $("#ddlGender").val(u.IdGender);
+                $("#ddlMaritalStatus").val(u.IdMaritalStatus);
+                $("#ddlRole").val(u.IdRol);
+                $("#txtNewUsername").val(u.Username);
+                $("#txtNewPassword").val("").attr("placeholder", "Dejar en blanco para no cambiar");
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
+            }
+        });
     }
 }
 
-function reactivateUser(id) {
-    execStatus("ReactivateUser", id, true, loadUsers);
+function saveUser() {
+    let userObj = {
+        IdUser: parseInt($("#txtIdUser").val()) || 0,
+        FirstName: $("#txtFirstName").val().trim(),
+        LastName: $("#txtLastName").val().trim(),
+        DNI: $("#txtDNI").val().trim(),
+        BirthDate: $("#txtBirthDate").val(),
+        IdGender: parseInt($("#ddlGender").val()),
+        IdMaritalStatus: parseInt($("#ddlMaritalStatus").val()),
+        IdRol: parseInt($("#ddlRole").val()),
+        Username: $("#txtNewUsername").val().trim(),
+        Password: $("#txtNewPassword").val().trim()
+    };
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/SaveUser",
+        data: JSON.stringify({ user: userObj }),
+        contentType: "application/json; charset=utf-8",
+        success: function () {
+            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+            loadUsers();
+        }
+    });
 }
 
-// --- GESTIÓN DE PROYECTOS ---
+// --- MÓDULO PROYECTOS ---
 function loadProjects() {
     $.ajax({
         type: "POST",
@@ -140,9 +147,11 @@ function loadProjects() {
                     <td><strong>${p.ProjectName}</strong></td>
                     <td>${p.OwnerName}</td>
                     <td>${p.StartDateString}</td>
-                    <td><span class="badge ${badge}">${p.IsActive ? 'Activo' : 'Inactivo'}</span></td>
+                    <td>${p.EndDateString}</td>
+                    <td><span class="badge bg-info">${p.Status}</span></td>
+                    <td><span class="badge ${badge}">${p.IsActive ? 'Sí' : 'No'}</span></td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="editProject(${p.IdProject})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="openProjectModal(${p.IdProject})"><i class="bi bi-pencil"></i></button>
                     </td></tr>`;
             });
             $("#tblProjects tbody").html(html);
@@ -150,54 +159,52 @@ function loadProjects() {
     });
 }
 
-// --- FUNCIÓN GENÉRICA PARA CAMBIO DE ESTADO (BORRADO LÓGICO) ---
-function execStatus(method, id, status, callback) {
-    $.ajax({
-        type: "POST",
-        url: "Default.aspx/" + method,
-        data: JSON.stringify({ id: id, active: status }),
-        contentType: "application/json; charset=utf-8",
-        success: function (r) {
-            if (r.d) {
-                callback();
-            } else {
-                alert("No se pudo actualizar el estado en el servidor.");
-            }
-        },
-        error: function (xhr) {
-            console.error("Error en " + method, xhr.responseText);
+function openProjectModal(id) {
+    $("#txtIdProject").val(id);
+    $("#projectModal input, #projectModal textarea").val("");
+    loadOwnersCombo().done(function () {
+        if (id === 0) {
+            $("#ddlProjectStatus").val("Pendiente");
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('projectModal')).show();
+        } else {
+            $.ajax({
+                type: "POST",
+                url: "Default.aspx/GetProjectById",
+                data: JSON.stringify({ id: id }),
+                contentType: "application/json; charset=utf-8",
+                success: function (r) {
+                    let p = r.d;
+                    $("#txtProjectName").val(p.ProjectName);
+                    $("#txtProjectDesc").val(p.Description);
+                    $("#txtStartDate").val(p.StartDateString);
+                    $("#txtEndDate").val(p.EndDateString);
+                    $("#ddlProjectOwner").val(p.IdUserOwner);
+                    $("#ddlProjectStatus").val(p.Status);
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('projectModal')).show();
+                }
+            });
         }
     });
 }
 
-// --- UTILIDADES (CATÁLOGOS Y LOGOUT) ---
-function loadCatalogs() {
+function saveProject() {
+    let pObj = {
+        IdProject: parseInt($("#txtIdProject").val()) || 0,
+        ProjectName: $("#txtProjectName").val().trim(),
+        Description: $("#txtProjectDesc").val().trim(),
+        StartDate: $("#txtStartDate").val(),
+        EndDate: $("#txtEndDate").val(),
+        IdUserOwner: parseInt($("#ddlProjectOwner").val()),
+        Status: $("#ddlProjectStatus").val()
+    };
     $.ajax({
         type: "POST",
-        url: "Default.aspx/GetCatalogs",
+        url: "Default.aspx/SaveProject",
+        data: JSON.stringify({ project: pObj }),
         contentType: "application/json; charset=utf-8",
-        success: function (r) {
-            fillSelect("#ddlGender", r.d.Genders);
-            fillSelect("#ddlMaritalStatus", r.d.MaritalStatuses);
-            fillSelect("#ddlRole", r.d.Roles);
-        }
-    });
-}
-
-function fillSelect(sel, data) {
-    let h = '<option value="0">-- Seleccione --</option>';
-    if (data) data.forEach(i => { h += `<option value="${i.Id}">${i.Description}</option>`; });
-    $(sel).html(h);
-}
-
-function logout() {
-    $.ajax({
-        type: "POST",
-        url: "Default.aspx/Logout",
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
         success: function () {
-            window.location.href = "Login.aspx";
+            bootstrap.Modal.getInstance(document.getElementById('projectModal')).hide();
+            loadProjects();
         }
     });
 }
@@ -217,12 +224,182 @@ function loadTasks() {
                     <td><strong>${t.Title}</strong></td>
                     <td>${t.ProjectName}</td>
                     <td>${t.AssignedTo}</td>
+                    <td>${t.DueDateString}</td>
                     <td><span class="badge ${cls}">${t.Status}</span></td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-warning" onclick="editTask(${t.IdTask})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="openTaskModal(${t.IdTask})"><i class="bi bi-pencil"></i></button>
                     </td></tr>`;
             });
             $("#tblTasks tbody").html(html);
         }
+    });
+}
+
+function openTaskModal(id) {
+    $("#txtIdTask").val(id);
+    $("#taskModal input").val("");
+    $("#divCommentsList").empty();
+
+    $.when(loadProjectsCombo(), loadOwnersCombo()).done(function () {
+        if (id === 0) {
+            $("#ddlTaskStatus").val("Pendiente");
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('taskModal')).show();
+        } else {
+            $.ajax({
+                type: "POST",
+                url: "Default.aspx/GetTaskById",
+                data: JSON.stringify({ id: id }),
+                contentType: "application/json; charset=utf-8",
+                success: function (r) {
+                    let t = r.d;
+                    $("#ddlTaskProject").val(t.IdProject);
+                    $("#txtTaskTitle").val(t.Title);
+                    $("#ddlTaskUser").val(t.IdUserAssigned);
+                    $("#txtTaskDueDate").val(t.DueDateString);
+                    $("#ddlTaskStatus").val(t.Status);
+                    loadComments(id);
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('taskModal')).show();
+                }
+            });
+        }
+    });
+}
+
+function saveTask() {
+    let tObj = {
+        IdTask: parseInt($("#txtIdTask").val()) || 0,
+        IdProject: parseInt($("#ddlTaskProject").val()),
+        Title: $("#txtTaskTitle").val().trim(),
+        IdUserAssigned: parseInt($("#ddlTaskUser").val()),
+        DueDate: $("#txtTaskDueDate").val(),
+        Status: $("#ddlTaskStatus").val()
+    };
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/SaveTask",
+        data: JSON.stringify({ task: tObj }),
+        contentType: "application/json; charset=utf-8",
+        success: function () {
+            bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+            loadTasks();
+        }
+    });
+}
+
+function loadComments(idTask) {
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/GetTaskComments",
+        data: JSON.stringify({ idTask: idTask }),
+        contentType: "application/json; charset=utf-8",
+        success: function (r) {
+            let h = "";
+            r.d.forEach(c => {
+                h += `<div class="p-2 border-bottom small">
+                        <strong>${c.UserName}</strong> <span class="text-muted float-end">${c.DateString}</span><br/>
+                        ${c.Text}
+                      </div>`;
+            });
+            $("#divCommentsList").html(h || '<p class="text-muted text-center small">Sin comentarios</p>');
+        }
+    });
+}
+
+function saveComment() {
+    let id = parseInt($("#txtIdTask").val());
+    let txt = $("#txtNewComment").val().trim();
+    if (!txt) return;
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/SaveComment",
+        data: JSON.stringify({ idTask: id, text: txt }),
+        contentType: "application/json; charset=utf-8",
+        success: function () {
+            $("#txtNewComment").val("");
+            loadComments(id);
+        }
+    });
+}
+
+// --- UTILIDADES ---
+function loadCatalogs() {
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/GetCatalogs",
+        contentType: "application/json; charset=utf-8",
+        success: function (r) {
+            fillSelect("#ddlGender", r.d.Genders);
+            fillSelect("#ddlMaritalStatus", r.d.MaritalStatuses);
+            fillSelect("#ddlRole", r.d.Roles);
+        }
+    });
+}
+
+function loadProjectsCombo() {
+    return $.ajax({
+        type: "POST",
+        url: "Default.aspx/GetProjectsList",
+        data: JSON.stringify({ filter: "" }),
+        contentType: "application/json; charset=utf-8",
+        success: function (r) {
+            let h = '<option value="0">-- Seleccione Proyecto --</option>';
+            r.d.forEach(p => { h += `<option value="${p.IdProject}">${p.ProjectName}</option>`; });
+            $("#ddlTaskProject").html(h);
+        }
+    });
+}
+
+function loadOwnersCombo() {
+    return $.ajax({
+        type: "POST",
+        url: "Default.aspx/GetUsersList",
+        data: JSON.stringify({ filter: "" }),
+        contentType: "application/json; charset=utf-8",
+        success: function (r) {
+            let h = '<option value="0">-- Seleccione Usuario --</option>';
+            r.d.forEach(u => { h += `<option value="${u.IdUser}">${u.FirstName} ${u.LastName}</option>`; });
+            $("#ddlProjectOwner, #ddlTaskUser").html(h);
+        }
+    });
+}
+
+function fillSelect(sel, data) {
+    let h = '<option value="0">-- Seleccione --</option>';
+    if (data) data.forEach(i => { h += `<option value="${i.Id}">${i.Description}</option>`; });
+    $(sel).html(h);
+}
+
+function deleteUser(id) { if (confirm("¿Desactivar usuario?")) execStatus("DeleteUser", id, loadUsers); }
+function reactivateUser(id) { execStatus("ReactivateUser", id, loadUsers); }
+
+function execStatus(method, id, callback) {
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/" + method,
+        data: JSON.stringify({ id: id }),
+        contentType: "application/json; charset=utf-8",
+        success: function (r) { if (r.d) callback(); }
+    });
+}
+
+function performLogin() {
+    $.ajax({
+        type: "POST",
+        url: "Login.aspx/PerformLogin",
+        data: JSON.stringify({ username: $("#txtUsername").val(), password: $("#txtPassword").val() }),
+        contentType: "application/json; charset=utf-8",
+        success: function (r) {
+            if (r.d === "success") window.location.href = "Default.aspx";
+            else alert("Acceso denegado");
+        }
+    });
+}
+
+function logout() {
+    $.ajax({
+        type: "POST",
+        url: "Default.aspx/Logout",
+        contentType: "application/json; charset=utf-8",
+        success: function () { window.location.href = "Login.aspx"; }
     });
 }

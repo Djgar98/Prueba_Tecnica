@@ -170,7 +170,7 @@
                             <div class="col-md-6"><label class="small fw-bold">Nombres</label><input type="text" id="txtFirstName" class="form-control" /></div>
                             <div class="col-md-6"><label class="small fw-bold">Apellidos</label><input type="text" id="txtLastName" class="form-control" /></div>
                             <div class="col-md-6"><label class="small fw-bold">Cédula</label><input type="text" id="txtDNI" class="form-control" maxlength="16" /></div>
-                            <div class="col-md-6"><label class="small fw-bold">Nacimiento</label><input type="text" id="txtBirthDate" class="form-control datepicker bg-white" readonly /></div>
+                            <div class="col-md-6"><label class="small fw-bold">Nacimiento</label><input type="text" id="txtBirthDate" class="form-control datepicker bg-white Datepicker" readonly /></div>
                             <div class="col-md-4"><label class="small fw-bold">Género</label><select id="ddlGender" class="form-select"></select></div>
                             <div class="col-md-4"><label class="small fw-bold">Estado Civil</label><select id="ddlMaritalStatus" class="form-select"></select></div>
                             <div class="col-md-4"><label class="small fw-bold">Rol</label><select id="ddlRole" class="form-select"></select></div>
