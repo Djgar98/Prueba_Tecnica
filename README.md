@@ -21,5 +21,5 @@ Sistema web desarrollado en **ASP.NET Web Forms (C#)** para la administración d
 4. Ajusta la cadena de conexión en el `Web.config`:
    ```xml
    <connectionStrings>
-     <add name="Conn" connectionString="Data Source=TU_SERVIDOR;Initial Catalog=GestionTareas_DB;Integrated Security=True" />
+     <add name="Conn" connectionString="Data Source=TU_SERVIDOR;Initial Catalog=SevenSuite_TaskDB;Integrated Security=True" />
    </connectionStrings>
